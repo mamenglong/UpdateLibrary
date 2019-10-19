@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         btn_update.setOnClickListener {
-            UpdateUtil.checkUpdate()
+            UpdateUtil.checkUpdate(BuildConfig.VERSION_CODE)
         }
         btn_update_process.setOnClickListener {
             sendBroadcast(Intent(UpdateService.ACTION_UPDATE_PROGRESS))

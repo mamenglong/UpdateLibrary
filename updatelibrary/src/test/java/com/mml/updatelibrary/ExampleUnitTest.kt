@@ -23,6 +23,6 @@ class ExampleUnitTest {
     }
     @Test
     fun tets(){
-        UpdateUtil.checkUpdate()
+        UpdateUtil.checkUpdate(0)
     }
 }

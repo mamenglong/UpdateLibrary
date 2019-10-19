@@ -35,7 +35,7 @@ object UpdateUtil {
     }
 
     var updateInfo: UpdateInfo = UpdateInfo()
-    fun checkUpdate(onError:((msg:String)->Unit)?=null) {
+    fun checkUpdate(version:Int,onError:((msg:String)->Unit)?=null) {
         val httpAsync = UpdateUrl().url.httpGet()
             .responseObject<UpdateInfo> { response, _, result ->
                 log(msg = "content:${response.body}", tag = "UpdateUtil")
@@ -43,7 +43,7 @@ object UpdateUtil {
                     log(msg = "content:$updateInfo", tag = "UpdateUtil")
                     this.updateInfo = updateInfo
                     //设置每次显示，设置本次显示及强制更新 每次都显示弹窗
-                    if (updateInfo.config.serverVersionCode > BuildConfig.VERSION_CODE||updateInfo.config.alwaysShow) {
+                    if (updateInfo.config.serverVersionCode > version||updateInfo.config.alwaysShow) {
                         shouldShowUpdateDialog()
                     }else{
                         showToast("暂无更新")
@@ -105,6 +105,6 @@ object UpdateUtil {
 
     fun cancelNoLongerRemind() {
         SP.ignoreVersion=0
-        checkUpdate()
+        checkUpdate(0)
     }
 }
