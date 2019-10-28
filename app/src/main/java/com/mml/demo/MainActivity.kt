@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
             UpdateUtil.checkUpdate(BuildConfig.VERSION_CODE)
         }
         btn_update_process.setOnClickListener {
-            sendBroadcast(Intent(UpdateService.ACTION_UPDATE_PROGRESS))
+            
 
         }
         btn_update_Cancel_no_notice.setOnClickListener {

@@ -10,5 +10,5 @@ package com.mml.updatelibrary.data
  */
 data class UpdateUrl(
     // 配置文件地址
-    val url: String = "https://raw.githubusercontent.com/mamenglong/OnceApplication/master/testlibrary/src/main/res/raw/config.json"
+    var url: String = "https://raw.githubusercontent.com/mamenglong/OnceApplication/master/testlibrary/src/main/res/raw/config.json"
 )
