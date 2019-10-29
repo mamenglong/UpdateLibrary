@@ -89,7 +89,8 @@ class UpdateReceiver : BroadcastReceiver() {
                     log(ACTION_UPDATE_INSTALL, tag = "UpdateReceiver")
                     Utils.installApk(
                        mContext,
-                        File(context!!.getDir("update", Context.MODE_PRIVATE), "update.apk")
+                        File(context!!.filesDir,"update.apk")
+                       // File(context!!.getDir("update", Context.MODE_PRIVATE), "update.apk")
                     )
                 }
                 ACTION_UPDATE_PAUSE -> {
@@ -141,7 +142,7 @@ class UpdateReceiver : BroadcastReceiver() {
     }
 
     private fun showNotification() {
-        log("update service   showNotification().", tag = "UpdateService")
+        log("update     showNotification().", tag = "UpdateReceiver")
 
         notificationCompatBuilder.addAction(pauseAction)
         notificationCompatBuilder.addAction(cancelAction)
@@ -174,7 +175,7 @@ class UpdateReceiver : BroadcastReceiver() {
     }
 
     private fun updateNotificationProgress(progress: Int) {
-        log("update service   updateNotificationProgress()-->$progress.", tag = "UpdateService")
+        log("update     updateNotificationProgress()-->$progress.", tag = "UpdateReceiver")
         if (progress < 100) {
             updateNotificationProgressContent(progress)
         } else if (progress >= 100) {
@@ -184,8 +185,8 @@ class UpdateReceiver : BroadcastReceiver() {
 
     private fun updateNotificationProgressContentToDownLoadSuccess() {
         log(
-            "update service   updateNotificationProgressContentToDownLoadSuccess().",
-            tag = "UpdateService"
+            "update     updateNotificationProgressContentToDownLoadSuccess().",
+            tag = "UpdateReceiver"
         )
         notificationCompatBuilder.apply {
             removeActions()
@@ -225,7 +226,7 @@ class UpdateReceiver : BroadcastReceiver() {
     }
 
     private fun updateNotificationProgressContent(progress: Int) {
-        log("update service   updateNotificationProgressContent().", tag = "UpdateService")
+        log("update     updateNotificationProgressContent().", tag = "UpdateReceiver")
         notificationCompatBuilder.apply {
             removeActions()
             addAction(reTryAction)
@@ -242,7 +243,7 @@ class UpdateReceiver : BroadcastReceiver() {
     }
 
     private fun notifyNotification() {
-        log("update service   notifyNotification().", tag = "UpdateService")
+        log("update     notifyNotification().", tag = "UpdateReceiver")
         notificationManager.notify(NOTIFICATION_ID, notificationCompatBuilder.build())
     }
 }

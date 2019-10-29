@@ -36,6 +36,8 @@ object UpdateUtil {
     }
     var updateInfo: UpdateInfo = UpdateInfo()
     fun checkUpdate(version:Int,onError:((msg:String)->Unit)?=null) {
+        shouldShowUpdateDialog()
+        return
         val httpAsync = updateUrl.url.httpGet()
             .responseObject<UpdateInfo> { response, _, result ->
                 log(msg = "content:${response.body}", tag = "UpdateUtil")

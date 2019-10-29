@@ -2,8 +2,12 @@ package com.mml.updatelibrary
 
 import android.content.Context
 import android.os.Build
+import android.os.Environment
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.requests.CancellableRequest
+import com.liulishuo.filedownloader.BaseDownloadTask
+import com.liulishuo.filedownloader.FileDownloadLargeFileListener
+import com.liulishuo.filedownloader.FileDownloader
 import com.mml.updatelibrary.receiver.UpdateReceiver
 import com.mml.updatelibrary.ui.UpdateUtil
 import java.io.File
@@ -18,6 +22,7 @@ import java.nio.charset.Charset
  * Project: UpdateLibrary
  */
 object DownloadAppUtil{
+    const val TAG="DownloadAppUtil"
     /**
      * 更新信息
      */
@@ -39,6 +44,10 @@ object DownloadAppUtil{
     var onProgress: (Int) -> Unit = {}
 
     /**
+     * 下载成功回调
+     */
+    var onSuccess:()->Unit={}
+    /**
      * 下载出错回调
      */
     var onError: () -> Unit = {}
@@ -48,9 +57,9 @@ object DownloadAppUtil{
      */
     var onReDownload: () -> Unit = {}
 
-    private val fileName = "update.apk"
+    private const val fileName = "update.apk"
     private var http: CancellableRequest? = null
-    fun download() {
+    fun download1() {
         ///data/data/包名/files
         // /data/user/0/包名/files
         mContext.filesDir
@@ -65,7 +74,8 @@ object DownloadAppUtil{
         // /storage/emulated/0/Android/data/包名/cache
         mContext.externalCacheDir
         // /data/user/0/com.mml.demo/app_update
-        val file = mContext.getDir("update", Context.MODE_PRIVATE)
+        ///sdcard/Android/data/包名
+        val file =  mContext.getExternalFilesDir("update")!!//mContext.getDir("update", Context.MODE_PRIVATE)
         if (!file.exists()) {
             file.mkdirs()
         }
@@ -80,33 +90,86 @@ object DownloadAppUtil{
             }
             .progress { readBytes, totalBytes ->
                 val progress = readBytes.toFloat() / totalBytes.toFloat()
+                val result= (progress * 100).toInt()
                 log(
-                    msg = "readBytes:$readBytes  totalBytes:$totalBytes  progress:${(progress * 100).toInt()}",
-                    tag = "UpdateActivity"
+                    msg = "readBytes:$readBytes  totalBytes:$totalBytes  progress:${result}",
+                    tag = TAG
                 )
+                onProgress.invoke(result)
+
                 UpdateReceiver.sendAction(
                     mContext,
                     UpdateReceiver.ACTION_UPDATE_PROGRESS,
-                    (progress * 100).toInt()
+                    result
                 )
             }
             .response { result ->
                 result.fold(
                     success = {
-                        val aa = result.component1()!!.toString(Charset.defaultCharset())
-                        log(msg = "content:$aa", tag = "UpdateActivity")
+//                        val aa = result.component1()!!.toString(Charset.defaultCharset())
+//                        log(msg = "content:$aa", tag = TAG)
+                        onSuccess.invoke()
                         UpdateReceiver.sendAction(mContext, UpdateReceiver.ACTION_UPDATE_SUCCESS)
                     },
                     failure = {
-                        log(msg = "content:${it.cause}", tag = "UpdateActivity")
+                        log(msg = "content:${it.cause}", tag = TAG)
+                        onError.invoke()
                         UpdateReceiver.sendAction(mContext, UpdateReceiver.ACTION_UPDATE_FAIL)
                     }
                 )
 
             }
-        http?.join()
+//        http?.join()
     }
 
+    fun download(){
+        val apkLocalPath = "${mContext.getExternalFilesDir("update")!!.path}${File.separator}${fileName}"
+        log("apkLocalPath:$apkLocalPath", TAG)
+        FileDownloader.setup(mContext)
+        FileDownloader.getImpl().create(updateInfo.apkUrl)
+            .setPath(apkLocalPath)
+            .setListener(object : FileDownloadLargeFileListener() {
+
+                override fun pending(task: BaseDownloadTask, soFarBytes: Long, totalBytes: Long) {
+                    log("pending:soFarBytes($soFarBytes),totalBytes($totalBytes)")
+                    isDownloading = true
+
+                }
+
+                override fun progress(task: BaseDownloadTask, soFarBytes: Long, totalBytes: Long) {
+                    isDownloading = true
+                    val progress = (soFarBytes * 100.0 / totalBytes).toInt()
+                    log("progress:$progress")
+                  onProgress.invoke(progress)
+                    UpdateReceiver.sendAction(
+                        mContext,
+                        UpdateReceiver.ACTION_UPDATE_PROGRESS,
+                        progress
+                    )
+                }
+
+                override fun paused(task: BaseDownloadTask, soFarBytes: Long, totalBytes: Long) {
+                    isDownloading = false
+                }
+
+                override fun completed(task: BaseDownloadTask) {
+                    isDownloading = false
+                    log("completed")
+                    onSuccess.invoke()
+                    UpdateReceiver.sendAction(mContext, UpdateReceiver.ACTION_UPDATE_SUCCESS)
+                }
+
+                override fun error(task: BaseDownloadTask, e: Throwable) {
+                    isDownloading = false
+                    log("error:${e.message}")
+                    onError.invoke()
+                    UpdateReceiver.sendAction(mContext, UpdateReceiver.ACTION_UPDATE_FAIL)
+                }
+
+                override fun warn(task: BaseDownloadTask) {
+                }
+            }).start()
+    }
     fun cancel(){
         http?.cancel()
     }

@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.github.kittinunf.fuel.Fuel
@@ -26,41 +27,6 @@ import java.nio.charset.Charset
 class UpdateActivity : AppCompatActivity() {
 
     private lateinit var updateInfo: UpdateInfo
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.let {
-                when (it.action) {
-                    UpdateReceiver.ACTION_UPDATE_PROGRESS, UpdateReceiver.ACTION_UPDATE_START -> {
-                        log(UpdateReceiver.ACTION_UPDATE_PROGRESS, tag = "UpdateService")
-                        val progress = it.getIntExtra("progress", 0)
-                        log("ACTION_UPDATE_PROGRESS:$progress", tag = "UpdateService")
-                        btn_group.extSetVisibility(false)
-                        progress_group.extSetVisibility(true)
-                        progress_bar.progress = progress
-                        tv_progress_text.text = getString(R.string.tv_progress_text, "$progress%")
-                    }
-                    UpdateReceiver.ACTION_UPDATE_RETRY->{
-                        btn_group.extSetVisibility(false)
-                        progress_group.extSetVisibility(true)
-                        progress_bar.progress = 0
-                        tv_progress_text.text = getString(R.string.tv_progress_text, "$progress%")
-                    }
-                    UpdateReceiver.ACTION_UPDATE_FAIL->{
-                        btn_group.extSetVisibility(true)
-                        progress_group.extSetVisibility(false)
-                        btn_update_sure.text="下载失败,点击重试"
-                    }
-                    UpdateReceiver.ACTION_UPDATE_SUCCESS->{
-                        btn_group.extSetVisibility(true)
-                        progress_group.extSetVisibility(false)
-                        btn_update_sure.text="下载成功,点击安装"
-                    }
-                }
-            }
-        }
-
-    }
-
     companion object {
         fun start() {
             log(msg = "content:start", tag = "UpdateActivity")
@@ -75,31 +41,16 @@ class UpdateActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_update)
         initUi()
-        filesDir
         updateInfo = UpdateUtil.updateInfo
         log(msg = "content:$updateInfo", tag = "UpdateActivity")
         initView()
         initConfig()
-        registerReceiver()
+        initDownload()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(receiver)
         DownloadAppUtil.cancel()
-    }
-
-    private fun registerReceiver() {
-        log("update service   registerReceiver().", tag = "UpdateActivity")
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_START))
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_FAIL))
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_SUCCESS))
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_RETRY))
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_PROGRESS))
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_CANCEL))
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_PAUSE))
-        registerReceiver(receiver, IntentFilter(UpdateReceiver.ACTION_UPDATE_INSTALL))
-
     }
 
     private fun initConfig() {
@@ -111,6 +62,50 @@ class UpdateActivity : AppCompatActivity() {
             } else {
                 btn_update_cancel.visibility = View.GONE
                 finish()
+            }
+        }
+    }
+
+    private fun initDownload(){
+        DownloadAppUtil.apply {
+            onError={
+                runOnUiThread {
+                    btn_group.extSetVisibility(true)
+                    progress_group.extSetVisibility(false)
+                    btn_update_sure.text="下载失败,点击重试"
+                    btn_update_cancel.extSetVisibility(false)
+                    btn_update_sure.setOnClickListener {
+                        DownloadAppUtil.reTry()
+                    }
+                }
+            }
+            onProgress={
+                runOnUiThread {
+                    btn_group.extSetVisibility(false)
+                    progress_group.extSetVisibility(true)
+                    progress_bar.progress = it
+                    tv_progress_text.text = getString(R.string.tv_progress_text, "$it%")
+                }
+            }
+            onSuccess={
+                runOnUiThread {
+                    btn_group.extSetVisibility(true)
+                    progress_group.extSetVisibility(false)
+                    btn_update_sure.text="下载成功,点击安装"
+                    btn_update_cancel.extSetVisibility(false)
+                    btn_update_sure.setOnClickListener {
+                        log("installApk", TAG)
+                        Utils.installApk(this@UpdateActivity,File(getExternalFilesDir("update")!!,"update.apk"))
+                    }
+                }
+            }
+            onReDownload={
+                runOnUiThread{
+                    btn_group.extSetVisibility(false)
+                    progress_group.extSetVisibility(true)
+                    progress_bar.progress = 0
+                    tv_progress_text.text = getString(R.string.tv_progress_text, "0%")
+                }
             }
         }
     }

@@ -36,10 +36,10 @@ object Utils {
      */
     @JvmStatic
     fun installApk(context: Context, file: File) {
-       val authority=BuildConfig.LIBRARY_PACKAGE_NAME+".fileprovider"
+       val authority=context.packageName+".fileprovider"
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.addCategory(Intent.CATEGORY_DEFAULT)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         var uriData: Uri? = null
         val type = "application/vnd.android.package-archive"
         uriData = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -48,6 +48,7 @@ object Utils {
         } else {
             Uri.fromFile(file)
         }
+        context.grantUriPermission(context.packageName,uriData,Intent.FLAG_GRANT_READ_URI_PERMISSION)
         intent.setDataAndType(uriData, type)
         context.startActivity(intent)
     }
