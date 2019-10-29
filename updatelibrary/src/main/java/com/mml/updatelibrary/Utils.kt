@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.FileProvider
+import com.mml.updatelibrary.ui.UpdateUtil
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -22,7 +23,7 @@ import kotlin.system.exitProcess
  * Project: OnceApplication
  */
 fun Any.log(msg: String,tag:String="tag"){
-    if (BuildConfig.DEBUG){
+    if (UpdateUtil.isDebug||BuildConfig.DEBUG){
         Log.i(tag,msg)
     }
 }
@@ -39,16 +40,15 @@ object Utils {
        val authority=context.packageName+".fileprovider"
         val intent = Intent(Intent.ACTION_VIEW)
         intent.addCategory(Intent.CATEGORY_DEFAULT)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         var uriData: Uri? = null
         val type = "application/vnd.android.package-archive"
         uriData = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.flags=Intent.FLAG_GRANT_READ_URI_PERMISSION
             FileProvider.getUriForFile(context, authority, file)
         } else {
             Uri.fromFile(file)
         }
-        context.grantUriPermission(context.packageName,uriData,Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.setDataAndType(uriData, type)
         context.startActivity(intent)
     }

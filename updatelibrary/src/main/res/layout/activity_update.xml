@@ -59,6 +59,7 @@
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/btn_group"
+
         app:constraint_referenced_ids="btn_update_sure,btn_update_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
@@ -107,7 +108,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scrollView2"
         app:layout_goneMarginBottom="10dp"/>
-
+    <TextView
+        android:id="@+id/btn_update_result"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_update_btn"
+        android:gravity="center"
+        tools:text="立即更新"
+        android:visibility="gone"
+        android:text="立即更新"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_update_cancel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scrollView2"
+        app:layout_goneMarginBottom="10dp"/>
     <TextView
         android:id="@+id/btn_update_cancel"
         android:layout_width="0dp"

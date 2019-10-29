@@ -70,30 +70,31 @@ class UpdateActivity : AppCompatActivity() {
         DownloadAppUtil.apply {
             onError={
                 runOnUiThread {
-                    btn_group.extSetVisibility(true)
-                    progress_group.extSetVisibility(false)
-                    btn_update_sure.text="下载失败,点击重试"
-                    btn_update_cancel.extSetVisibility(false)
-                    btn_update_sure.setOnClickListener {
+                    btn_group.visibility = View.GONE
+                    progress_group.visibility = View.GONE
+                    btn_update_result.visibility=View.VISIBLE
+                    btn_update_result.text="下载失败,点击重试"
+                    btn_update_result.setOnClickListener {
                         DownloadAppUtil.reTry()
                     }
                 }
             }
             onProgress={
                 runOnUiThread {
-                    btn_group.extSetVisibility(false)
-                    progress_group.extSetVisibility(true)
+                    btn_group.visibility = View.GONE
+                    progress_group.visibility = View.VISIBLE
+                    btn_update_result.visibility=View.GONE
                     progress_bar.progress = it
                     tv_progress_text.text = getString(R.string.tv_progress_text, "$it%")
                 }
             }
             onSuccess={
                 runOnUiThread {
-                    btn_group.extSetVisibility(true)
-                    progress_group.extSetVisibility(false)
-                    btn_update_sure.text="下载成功,点击安装"
-                    btn_update_cancel.extSetVisibility(false)
-                    btn_update_sure.setOnClickListener {
+                    btn_group.visibility = View.GONE
+                    progress_group.visibility = View.GONE
+                    btn_update_result.visibility=View.VISIBLE
+                    btn_update_result.text="下载成功,点击安装"
+                    btn_update_result.setOnClickListener {
                         log("installApk", TAG)
                         Utils.installApk(this@UpdateActivity,File(getExternalFilesDir("update")!!,"update.apk"))
                     }
@@ -101,8 +102,9 @@ class UpdateActivity : AppCompatActivity() {
             }
             onReDownload={
                 runOnUiThread{
-                    btn_group.extSetVisibility(false)
-                    progress_group.extSetVisibility(true)
+                    btn_group.visibility = View.GONE
+                    btn_update_result.visibility=View.GONE
+                    progress_group.visibility = View.VISIBLE
                     progress_bar.progress = 0
                     tv_progress_text.text = getString(R.string.tv_progress_text, "0%")
                 }

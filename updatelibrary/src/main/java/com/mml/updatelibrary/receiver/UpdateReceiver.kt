@@ -92,6 +92,7 @@ class UpdateReceiver : BroadcastReceiver() {
                         File(context!!.filesDir,"update.apk")
                        // File(context!!.getDir("update", Context.MODE_PRIVATE), "update.apk")
                     )
+                    cancelNotification()
                 }
                 ACTION_UPDATE_PAUSE -> {
                     log(ACTION_UPDATE_PAUSE, tag = "UpdateReceiver")
@@ -172,6 +173,9 @@ class UpdateReceiver : BroadcastReceiver() {
 
     private fun cancelNotification() {
         notificationManager.cancel(NOTIFICATION_ID)
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            notificationManager.deleteNotificationChannel(NotificationChannelID)
+        }
     }
 
     private fun updateNotificationProgress(progress: Int) {

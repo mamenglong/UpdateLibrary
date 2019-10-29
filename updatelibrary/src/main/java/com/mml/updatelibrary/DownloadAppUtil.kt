@@ -59,6 +59,7 @@ object DownloadAppUtil{
 
     private const val fileName = "update.apk"
     private var http: CancellableRequest? = null
+    private var downloadTask:BaseDownloadTask?=null
     fun download1() {
         ///data/data/包名/files
         // /data/user/0/包名/files
@@ -126,12 +127,14 @@ object DownloadAppUtil{
         val apkLocalPath = "${mContext.getExternalFilesDir("update")!!.path}${File.separator}${fileName}"
         log("apkLocalPath:$apkLocalPath", TAG)
         FileDownloader.setup(mContext)
-        FileDownloader.getImpl().create(updateInfo.apkUrl)
+        downloadTask= FileDownloader.getImpl().create(updateInfo.apkUrl)
+
+        downloadTask!!
             .setPath(apkLocalPath)
             .setListener(object : FileDownloadLargeFileListener() {
 
                 override fun pending(task: BaseDownloadTask, soFarBytes: Long, totalBytes: Long) {
-                    log("pending:soFarBytes($soFarBytes),totalBytes($totalBytes)")
+                    log("pending:soFarBytes($soFarBytes),totalBytes($totalBytes)",TAG)
                     isDownloading = true
 
                 }
@@ -139,7 +142,7 @@ object DownloadAppUtil{
                 override fun progress(task: BaseDownloadTask, soFarBytes: Long, totalBytes: Long) {
                     isDownloading = true
                     val progress = (soFarBytes * 100.0 / totalBytes).toInt()
-                    log("progress:$progress")
+                    log("progress:$progress", TAG)
                   onProgress.invoke(progress)
                     UpdateReceiver.sendAction(
                         mContext,
@@ -154,14 +157,14 @@ object DownloadAppUtil{
 
                 override fun completed(task: BaseDownloadTask) {
                     isDownloading = false
-                    log("completed")
+                    log("completed", TAG)
                     onSuccess.invoke()
                     UpdateReceiver.sendAction(mContext, UpdateReceiver.ACTION_UPDATE_SUCCESS)
                 }
 
                 override fun error(task: BaseDownloadTask, e: Throwable) {
                     isDownloading = false
-                    log("error:${e.message}")
+                    log("error:${e.message}", TAG)
                     onError.invoke()
                     UpdateReceiver.sendAction(mContext, UpdateReceiver.ACTION_UPDATE_FAIL)
                 }
@@ -172,12 +175,14 @@ object DownloadAppUtil{
     }
     fun cancel(){
         http?.cancel()
+        downloadTask?.pause()
     }
     /**
      * 出错后，点击重试
      */
     fun reTry() {
         onReDownload.invoke()
-        download()
+       // download()
+        downloadTask?.start()
     }
 }

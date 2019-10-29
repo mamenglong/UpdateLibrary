@@ -19,6 +19,10 @@ import com.mml.updatelibrary.log
  */
 object UpdateUtil {
 
+    /**
+     * 控制是否显示日志
+     */
+    var isDebug=false
     init {
         GlobalContextProvider.getGlobalContext()
     }
