@@ -89,7 +89,7 @@ class UpdateReceiver : BroadcastReceiver() {
                     log(ACTION_UPDATE_INSTALL, tag = "UpdateReceiver")
                     Utils.installApk(
                        mContext,
-                        File(context!!.filesDir,"update.apk")
+                        File(context!!.getExternalFilesDir("update")!!,"update.apk")
                        // File(context!!.getDir("update", Context.MODE_PRIVATE), "update.apk")
                     )
                     cancelNotification()

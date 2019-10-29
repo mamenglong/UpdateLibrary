@@ -52,7 +52,24 @@ object Utils {
         intent.setDataAndType(uriData, type)
         context.startActivity(intent)
     }
+    fun installApk(context: Context, apkPath: String) {
 
+        val i = Intent(Intent.ACTION_VIEW)
+        val apkFile = File(apkPath)
+
+        // android 7.0 fileprovider 适配
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            i.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            val contentUri = FileProvider.getUriForFile(
+                context, context.packageName + ".fileprovider", apkFile)
+            i.setDataAndType(contentUri, "application/vnd.android.package-archive")
+        } else {
+            i.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive")
+        }
+
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(i)
+    }
     /**
      * 安装apk
      *
