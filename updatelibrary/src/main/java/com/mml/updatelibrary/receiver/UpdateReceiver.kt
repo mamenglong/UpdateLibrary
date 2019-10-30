@@ -10,9 +10,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.liulishuo.filedownloader.util.DownloadServiceNotConnectedHelper.startForeground
 import com.mml.updatelibrary.*
 import com.mml.updatelibrary.GlobalContextProvider
+import com.mml.updatelibrary.service.UpdateService
+import com.mml.updatelibrary.util.DownloadAppUtil
+import com.mml.updatelibrary.util.Utils
+import com.mml.updatelibrary.util.log
+import com.mml.updatelibrary.util.removeActions
 import java.io.File
 
 /**
@@ -176,6 +180,8 @@ class UpdateReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
             notificationManager.deleteNotificationChannel(NotificationChannelID)
         }
+        DownloadAppUtil.cancel()
+        mContext.stopService(Intent(mContext,UpdateService::class.java))
     }
 
     private fun updateNotificationProgress(progress: Int) {

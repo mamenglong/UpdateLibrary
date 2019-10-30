@@ -1,11 +1,9 @@
 package com.mml.demo
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.mml.updatelibrary.Utils
-import com.mml.updatelibrary.service.UpdateService
-import com.mml.updatelibrary.ui.UpdateUtil
+import com.mml.updatelibrary.util.Utils
+import com.mml.updatelibrary.UpdateUtil
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 

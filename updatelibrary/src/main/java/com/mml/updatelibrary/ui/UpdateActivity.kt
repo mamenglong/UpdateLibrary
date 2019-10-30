@@ -1,28 +1,23 @@
 package com.mml.updatelibrary.ui
 
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Point
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.view.View
+import android.view.animation.Animation
 import androidx.appcompat.app.AppCompatActivity
-import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.requests.CancellableRequest
-import com.liulishuo.filedownloader.model.FileDownloadStatus.progress
-import com.mml.easyconfig.extSetVisibility
 import com.mml.updatelibrary.*
 import com.mml.updatelibrary.GlobalContextProvider
 import com.mml.updatelibrary.data.SP
 import com.mml.updatelibrary.data.UpdateInfo
+import com.mml.updatelibrary.leaf.AnimationUtils
 import com.mml.updatelibrary.receiver.UpdateReceiver
 import com.mml.updatelibrary.service.UpdateService
+import com.mml.updatelibrary.util.DownloadAppUtil
+import com.mml.updatelibrary.util.Utils
+import com.mml.updatelibrary.util.log
 import kotlinx.android.synthetic.main.activity_update.*
 import java.io.File
-import java.nio.charset.Charset
 
 class UpdateActivity : AppCompatActivity() {
 
@@ -51,8 +46,27 @@ class UpdateActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         DownloadAppUtil.cancel()
+        UpdateReceiver.sendAction(this, UpdateReceiver.ACTION_UPDATE_CANCEL)
     }
-
+    private fun initView() {
+        if (updateInfo.updateTitle.isNotEmpty())
+            tv_update_title.text = updateInfo.updateTitle
+        if (updateInfo.updateContent.isNotEmpty())
+            tv_update_content.text = updateInfo.updateContent
+        btn_update_sure.setOnClickListener {
+            if (updateInfo.config.isShowNotification)
+                  UpdateService.start(this)
+            DownloadAppUtil.download()
+            fan_pic.startAnimation(AnimationUtils.initRotateAnimation(
+                false, 1500, true,
+                Animation.INFINITE)
+            )
+        }
+        btn_update_cancel.setOnClickListener {
+            SP.ignoreVersion = updateInfo.config.serverVersionCode
+            finish()
+        }
+    }
     private fun initConfig() {
         if (updateInfo.config.force) {
             btn_update_cancel.visibility = View.GONE
@@ -77,15 +91,18 @@ class UpdateActivity : AppCompatActivity() {
                     btn_update_result.setOnClickListener {
                         DownloadAppUtil.reTry()
                     }
+                    leaf_progress.visibility=View.GONE
                 }
             }
             onProgress={
                 runOnUiThread {
+
                     btn_group.visibility = View.GONE
                     progress_group.visibility = View.VISIBLE
                     btn_update_result.visibility=View.GONE
                     progress_bar.progress = it
                     tv_progress_text.text = getString(R.string.tv_progress_text, "$it%")
+                    leaf_loading.setProgress(it)
                 }
             }
             onSuccess={
@@ -94,8 +111,10 @@ class UpdateActivity : AppCompatActivity() {
                     progress_group.visibility = View.GONE
                     btn_update_result.visibility=View.VISIBLE
                     btn_update_result.text="下载成功,点击安装"
+                    leaf_progress.visibility=View.GONE
                     btn_update_result.setOnClickListener {
                         log("installApk", TAG)
+                        UpdateReceiver.sendAction(this@UpdateActivity,UpdateReceiver.ACTION_UPDATE_CANCEL)
                         Utils.installApk(this@UpdateActivity,File(getExternalFilesDir("update")!!,"update.apk"))
                     }
                 }
@@ -107,7 +126,13 @@ class UpdateActivity : AppCompatActivity() {
                     progress_group.visibility = View.VISIBLE
                     progress_bar.progress = 0
                     tv_progress_text.text = getString(R.string.tv_progress_text, "0%")
+                    leaf_loading.setProgress(0)
                 }
+            }
+            onCancel={
+                btn_group.visibility = View.VISIBLE
+                progress_group.visibility = View.GONE
+                btn_update_result.visibility=View.GONE
             }
         }
     }
@@ -122,21 +147,7 @@ class UpdateActivity : AppCompatActivity() {
         window.attributes = p
     }
 
-    private fun initView() {
-        if (updateInfo.updateTitle.isNotEmpty())
-            tv_update_title.text = updateInfo.updateTitle
-        if (updateInfo.updateContent.isNotEmpty())
-            tv_update_content.text = updateInfo.updateContent
-        btn_update_sure.setOnClickListener {
-            UpdateService.start(this)
-            DownloadAppUtil.download()
 
-        }
-        btn_update_cancel.setOnClickListener {
-            SP.ignoreVersion = updateInfo.config.serverVersionCode
-            finish()
-        }
-    }
 
     override fun onBackPressed() {
         if (updateInfo.config.force) {

@@ -1,17 +1,15 @@
-package com.mml.updatelibrary
+package com.mml.updatelibrary.util
 
-import android.content.Context
 import android.os.Build
-import android.os.Environment
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.requests.CancellableRequest
 import com.liulishuo.filedownloader.BaseDownloadTask
 import com.liulishuo.filedownloader.FileDownloadLargeFileListener
 import com.liulishuo.filedownloader.FileDownloader
+import com.mml.updatelibrary.GlobalContextProvider
 import com.mml.updatelibrary.receiver.UpdateReceiver
-import com.mml.updatelibrary.ui.UpdateUtil
+import com.mml.updatelibrary.UpdateUtil
 import java.io.File
-import java.nio.charset.Charset
 
 /**
  * Author: Menglong Ma
@@ -57,6 +55,10 @@ object DownloadAppUtil{
      */
     var onReDownload: () -> Unit = {}
 
+    /**
+     * 取消下载
+     */
+     var onCancel:()->Unit={}
     private const val fileName = "update.apk"
     private var http: CancellableRequest? = null
     private var downloadTask:BaseDownloadTask?=null
@@ -124,17 +126,23 @@ object DownloadAppUtil{
     }
 
     fun download(){
-        val apkLocalPath = "${mContext.getExternalFilesDir("update")!!.path}${File.separator}${fileName}"
+        val apkLocalPath = "${mContext.getExternalFilesDir("update")!!.path}${File.separator}$fileName"
         log("apkLocalPath:$apkLocalPath", TAG)
+        if (File(apkLocalPath).exists()){
+            File(apkLocalPath).delete()
+        }
         FileDownloader.setup(mContext)
-        downloadTask= FileDownloader.getImpl().create(updateInfo.apkUrl)
+        downloadTask = FileDownloader.getImpl().create(
+            updateInfo.apkUrl)
 
         downloadTask!!
             .setPath(apkLocalPath)
             .setListener(object : FileDownloadLargeFileListener() {
 
                 override fun pending(task: BaseDownloadTask, soFarBytes: Long, totalBytes: Long) {
-                    log("pending:soFarBytes($soFarBytes),totalBytes($totalBytes)",TAG)
+                    log("pending:soFarBytes($soFarBytes),totalBytes($totalBytes)",
+                        TAG
+                    )
                     isDownloading = true
 
                 }
@@ -176,6 +184,7 @@ object DownloadAppUtil{
     fun cancel(){
         http?.cancel()
         downloadTask?.pause()
+        onCancel.invoke()
     }
     /**
      * 出错后，点击重试

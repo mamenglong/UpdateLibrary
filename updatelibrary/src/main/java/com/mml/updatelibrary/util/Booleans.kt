@@ -1,4 +1,4 @@
-package com.mml.updatelibrary
+package com.mml.updatelibrary.util
 
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
