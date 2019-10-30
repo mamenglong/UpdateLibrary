@@ -34,6 +34,10 @@ object UpdateUtil {
      * 网络请求获取配置时使用
      */
     var onError: ((msg: String) -> Unit)? = null
+    /**
+     * 没有更新回调
+     */
+    var onNoUpdate:()->Unit={  showToast("暂无更新") }
     private val updateUrl = UpdateUrl()
     /**
      * 全局使用的配置信息
@@ -41,12 +45,14 @@ object UpdateUtil {
     var updateInfo: UpdateInfo = UpdateInfo()
 
     /**
+     * 设置远程配置存放路径,设置以后使用网络请求获取远程配置
      * @param url 链接
      *
      * 应该在 [checkUpdate]之前调用
      */
     fun setUpdateUrl(url: String): UpdateUtil {
         updateUrl.url = url
+        isLocal=false
         return this
     }
 
@@ -54,12 +60,15 @@ object UpdateUtil {
      *  设置本地更新信息,设置以后不在执行网络请求获取配置
      * @param updateInfo
      */
-    fun setUpdateConfigInfo(updateInfo: UpdateInfo) {
+    fun setUpdateConfigInfo(updateInfo: UpdateInfo): UpdateUtil  {
         this.updateInfo = updateInfo
         isLocal = true
+        return this
     }
 
-
+    /**
+     * 最终调用这个进行检查更新
+     */
     fun checkUpdate() {
         if (BuildConfig.DEBUG) {
             shouldShowUpdateDialog()
@@ -102,7 +111,7 @@ object UpdateUtil {
                 UpdateActivity.start()
             }
         } else {
-            showToast("暂无更新")
+            onNoUpdate.invoke()
         }
     }
 
@@ -110,4 +119,7 @@ object UpdateUtil {
         SP.ignoreVersion = 0
         checkUpdate()
     }
+
+    @JvmStatic
+    fun getInstence()=this
 }
