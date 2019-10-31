@@ -30,6 +30,14 @@ object UpdateUtil {
         GlobalContextProvider.getGlobalContext()
     }
 
+    /***
+     * 检查前回调,可做些提示
+     */
+    var onStartCheck:()->Unit={showToast("正在检查更新...")}
+    /**
+     * 检查完毕,弹出有更新窗口或者[onNoUpdate]之前回调
+     */
+    var onFinishCheck:()->Unit={}
     /**
      * 网络请求获取配置时使用
      */
@@ -70,7 +78,8 @@ object UpdateUtil {
      * 最终调用这个进行检查更新
      */
     fun checkUpdate() {
-        if (BuildConfig.DEBUG) {
+        onStartCheck.invoke()
+        if (BuildConfig.DEBUG&&false) {
             shouldShowUpdateDialog()
             return
         }
@@ -82,20 +91,27 @@ object UpdateUtil {
     }
 
     private fun updateInfoFromLocal() {
+        log(msg = "updateInfoFromLocal", tag = "UpdateUtil")
         shouldShowUpdateDialog()
     }
 
     private fun updateInfoFromWeb() {
+        log(msg = "updateInfoFromWeb", tag = "UpdateUtil")
+        log(msg = "updateUrl.url:${updateUrl.url}", tag = "UpdateUtil")
+        if (updateUrl.url.isEmpty()){
+            throw RuntimeException("if you want use local config please call method #setUpdateConfigInfo(updateInfo: UpdateInfo) before #checkUpdate() ")
+        }
         val httpAsync = updateUrl.url.httpGet()
+            .timeout(10000)
             .responseObject<UpdateInfo> { response, _, result ->
-                log(msg = "content:${response.body}", tag = "UpdateUtil")
+                log(msg = "response content:${response.body}", tag = "UpdateUtil")
                 result.fold(success = { updateInfo ->
-                    log(msg = "content:$updateInfo", tag = "UpdateUtil")
+                    log(msg = "response content:$updateInfo", tag = "UpdateUtil")
                     UpdateUtil.updateInfo = updateInfo
                     shouldShowUpdateDialog()
                 }, failure = { fuelError ->
                     onError?.invoke("${fuelError.message}")
-                    log(msg = "content:$fuelError", tag = "UpdateUtil")
+                    log(msg = "response content:$fuelError", tag = "UpdateUtil")
                 })
             }
         httpAsync.join()
@@ -105,6 +121,7 @@ object UpdateUtil {
      * 显示更新弹窗
      */
     private fun shouldShowUpdateDialog() {
+        onFinishCheck.invoke()
         //设置每次显示，设置本次显示及强制更新 每次都显示弹窗
         if (updateInfo.config.serverVersionCode > nowVersion || updateInfo.config.alwaysShow) {
             if (SP.ignoreVersion < updateInfo.config.serverVersionCode) {

@@ -1,4 +1,31 @@
 # UpdateLibrary
+* 使用
+    + 本地配置
+        ```kotlin
+          UpdateUtil.
+                setUpdateConfigInfo(UpdateInfo())
+                .checkUpdate()
+        ```
+     + 网络配置
+        ```kotlin
+          UpdateUtil.
+                setUpdateUrl(url)
+                .checkUpdate()
+        ```
+* kotlin使用
+    ```kotlin
+         UpdateUtil.apply { 
+                isDebug=true
+                onError={}
+                onStartCheck={}
+                onFinishCheck={}
+                onError={}
+                onNoUpdate={}
+                setUpdateConfigInfo(UpdateInfo())
+                setUpdateUrl("")
+                checkUpdate()
+            }
+    ```
 * 配置参考
     ```json
     {

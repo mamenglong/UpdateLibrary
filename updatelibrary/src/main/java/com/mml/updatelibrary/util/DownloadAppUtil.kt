@@ -128,6 +128,7 @@ object DownloadAppUtil{
     fun download(){
         val apkLocalPath = "${mContext.getExternalFilesDir("update")!!.path}${File.separator}$fileName"
         log("apkLocalPath:$apkLocalPath", TAG)
+        log("apkUrl:${updateInfo.apkUrl}", TAG)
         if (File(apkLocalPath).exists()){
             File(apkLocalPath).delete()
         }
