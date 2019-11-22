@@ -17,4 +17,4 @@ jobs:
         echo test, and deploy your project.
     - name: maven
       run: 
-        mvn deploy -Dregistry=https://maven.pkg.github.com/mamenglong -Dtoken= ${{ secrets.GITHUB_TOKEN }}
+        mvn deploy -Dregistry=https://maven.pkg.github.com/mamenglong -Dtoken= 47bc56bcee571db4219069e2bcacb54a1d0db2d7
