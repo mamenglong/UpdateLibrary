@@ -15,6 +15,7 @@
 * kotlin使用
     ```kotlin
          UpdateUtil.apply { 
+                nowVersion = 0
                 isDebug=true
                 onError={}
                 onStartCheck={}
