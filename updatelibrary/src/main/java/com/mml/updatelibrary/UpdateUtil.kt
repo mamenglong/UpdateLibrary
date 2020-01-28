@@ -20,7 +20,7 @@ import com.mml.updatelibrary.util.log
  */
 object UpdateUtil {
     private var isLocal = false
-    private var nowVersion = 0
+    var nowVersion = 0
     /**
      * 控制是否显示日志
      */
